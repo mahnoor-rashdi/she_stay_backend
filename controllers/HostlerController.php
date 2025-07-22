@@ -59,8 +59,8 @@ class HostlersController {
 
             // Generate JWT token
             $payload = [
-                "iss" => "http://localhost", // issuer
-                "aud" => "http://localhost",
+                "iss" => "http://localhost:8080", // issuer
+                "aud" => "http://localhost:8080",
                 "iat" => time(),            // issued at
                 "exp" => time() + 3600,     // 1 hour expiry
                 "data" => [
@@ -101,6 +101,89 @@ public function getUserProfile($token) {
     }
 }
 
+public function updateHostlerProfile($token,$data) {
+    try {
+        $decoded = JWT::decode($token, new Key($this->jwtSecret, 'HS256'));
+        $userId = $decoded->data->id;
+    
+
+        $user = $this->hostlers->fetchHostlerProfile($userId);
+
+         if (!$user) {
+            return Response::json(false, "User not found");
+        }
+        $updatedData = [
+            'id' => $userId,
+            'username' => $data['username'] ?? $user['username'],
+            'email' => $data['email'] ?? $user['email'],
+            'cnic' => $data['cnic'] ?? $user['cnic'],
+            'guardianCnic' => $data['guardianCnic'] ?? $user['guardianCnic'],
+            'guardianNumber' => $data['guardianNumber'] ?? $user['guardianNumber'],
+            'mobileNumber' => $data['mobileNumber'] ?? $user['mobileNumber'],
+        ];
+
+        $updated = $this->hostlers->updateHostlerProfile($updatedData);
+
+        if($updated){
+            return Response::json(true, "Profile updated successfully", $updatedData);
+        }
+        else{
+            return Response::json(false, "Failed to update profile");
+        }
+
+
+        
+    } catch (Exception $e) {
+        return Response::json(false, "Invalid token: " . $e->getMessage());
+    }
+}
+
+// forgoet password 
+public function forgotPassword($data) {
+    if (empty($data['email']) || empty($data['newPassword'])) {
+        return Response::json(false, "Email and new password are required.");
+    }
+
+    // Check if user exists
+    $user = $this->hostlers->login($data['email']); // Reusing login() to get user by email
+    if (!$user) {
+        return Response::json(false, "Email not found.");
+    }
+
+    $success = $this->hostlers->updatePasswordByEmail($data['email'], $data['newPassword']);
+
+    return $success
+        ? Response::json(true, "Password updated successfully.")
+        : Response::json(false, "Failed to update password.");
+}
+
+// udpaitng passsword   
+public function updatePasswordWithToken($token, $data) {
+    if (empty($data['newPassword'])) {
+        return Response::json(false, "New password is required.");
+    }
+
+    try {
+        $decoded = JWT::decode($token, new Key($this->jwtSecret, 'HS256'));
+    //   print_r($decoded);
+        $userId = $decoded->data->id;
+
+        $user = $this->hostlers->fetchHostlerProfile($userId);
+        // print_r($user);
+        if (!$user) {
+            return Response::json(false, "User not found.");
+        }
+
+        $success = $this->hostlers->updatePasswordByEmail($user['email'], $data['newPassword']);
+
+        return $success
+            ? Response::json(true, "Password updated successfully.")
+            : Response::json(false, "Failed to update password.");
+
+    } catch (Exception $e) {
+        return Response::json(false, "Invalid token: " . $e->getMessage());
+    }
+}
 
 
     // Optional: verify token from header

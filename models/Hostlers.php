@@ -29,7 +29,7 @@ class Hostlers {
 
 
 
-
+// get hostler profile
     public function fetchHostlerProfile($id) {
     $sql = "SELECT * FROM $this->table WHERE id = ?";
     $stmt = $this->conn->prepare($sql);
@@ -40,8 +40,51 @@ class Hostlers {
 }
 
 
+
+
+
+
+public function updateHostlerProfile($data) {
+    $sql = "UPDATE $this->table SET 
+                username = ?, 
+                email = ?, 
+                cnic = ?, 
+                guardianCnic = ?, 
+                guardianNumber = ?, 
+                mobileNumber = ?
+            WHERE id = ?";  // assuming you are using `id` to identify the user
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param(
+        "ssssssi", 
+        $data['username'], 
+        $data['email'], 
+        $data['cnic'], 
+        $data['guardianCnic'], 
+        $data['guardianNumber'], 
+        $data['mobileNumber'], 
+        $data['id'] // this should be included in $data
+    );
+
+    return $stmt->execute();
+}
+
+
+
+// update psswod by email // reset password     
+public function updatePasswordByEmail($email, $newPassword) {
+    $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
+    $sql = "UPDATE $this->table SET password = ? WHERE email = ?";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ss", $hashedPassword, $email);
+    return $stmt->execute();
+}
+
+
+
     }
 
+    
 
 
 

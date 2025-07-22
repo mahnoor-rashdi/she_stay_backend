@@ -21,7 +21,7 @@ switch ($request) {
         $hostlerController->login($data);
         break;
 
-   case 'get-profile':
+    case 'get-profile':
     $headers = getallheaders();
     $authHeader = $headers['Authorization'] ?? '';
 
@@ -33,6 +33,39 @@ switch ($request) {
     $token = str_replace('Bearer ', '', $authHeader);
     echo $hostlerController->getUserProfile($token); // ✅ This does full job
     break;
+
+
+    case 'forgot-password':
+         $hostlerController->forgotPassword($data);
+        break;
+
+  case 'update-password':
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? '';
+
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            echo Response::json(false, "Authorization token not provided");
+            exit;
+        }
+
+        $token = str_replace('Bearer ', '', $authHeader);
+        echo $hostlerController->updatePasswordWithToken($token, $data);
+        break;
+
+
+         case 'update-hostler-profile':
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? '';
+
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            echo Response::json(false, "Authorization token not provided");
+            exit;
+        }
+
+        $token = str_replace('Bearer ', '', $authHeader);
+        echo $hostlerController->updateHostlerProfile($token, $data);
+        break;
+
 
     default:
         echo json_encode(["success" => false, "message" => "Invalid endpoint"]);

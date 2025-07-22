@@ -16,6 +16,7 @@ class Database {
         }
 
         $this->createAdminsTable();
+          $this->createHostlersTable();
     }
 
     public function getConnection() {
@@ -38,5 +39,27 @@ class Database {
             ]));
         }
     }
+
+    //HOSTLERS TABLE CCREATING 
+private function createHostlersTable() {
+    $query = "CREATE TABLE IF NOT EXISTS hostlers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(100) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        cnic VARCHAR(20) NOT NULL,
+        guardianCnic VARCHAR(20),
+        guardianNumber VARCHAR(20),
+        mobileNumber VARCHAR(20),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+
+    if (!$this->conn->query($query)) {
+        die(json_encode([
+            "status" => false,
+            "message" => "Failed to create 'hostlers' table: " . $this->conn->error
+        ]));
+    }
+}
 }
 ?>

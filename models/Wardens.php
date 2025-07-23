@@ -1,18 +1,18 @@
 <?php 
 
 
-class Hostlers {
+class Wardens {
       private $conn;
-      private $table = "hostlers";
+      private $table = "wardens";
 
       public function __construct($db) {
         $this->conn = $db;
     }
-       public function register($username, $cnic, $email, $password ,$guardianCnic, $guardianNumber,$mobileNumber) {
+       public function register($username, $cnic, $email, $password ,$mobileNumber) {
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-        $sql = "INSERT INTO $this->table (username, email, password,cnic,guardianCnic,guardianNumber,mobileNumber) VALUES (?,?,?,?,?,?,?)";
+        $sql = "INSERT INTO $this->table (username, email, password,cnic,mobileNumber) VALUES (?,?,?,?,?)";
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("sssssss", $username, $email, $hashedPassword,$cnic,$guardianCnic,$guardianNumber,$mobileNumber);
+        $stmt->bind_param("sssss", $username, $email, $hashedPassword,$cnic,$mobileNumber);
         return $stmt->execute();
     }
 
@@ -29,8 +29,8 @@ class Hostlers {
 
 
 
-// get hostler profile
-    public function fetchHostlerProfile($id) {
+//get hostler profile  
+    public function fetchWardensProfile($id) {
     $sql = "SELECT * FROM $this->table WHERE id = ?";
     $stmt = $this->conn->prepare($sql);
     $stmt->bind_param("i", $id);
@@ -40,29 +40,24 @@ class Hostlers {
 }
 
 
-
-
-
-
-public function updateHostlerProfile($data) {
+public function updateWardensProfile($data) {
     $sql = "UPDATE $this->table SET 
                 username = ?, 
                 email = ?, 
                 cnic = ?, 
-                guardianCnic = ?, 
-                guardianNumber = ?, 
                 mobileNumber = ?
+
             WHERE id = ?";  // assuming you are using `id` to identify the user
+
 
     $stmt = $this->conn->prepare($sql);
     $stmt->bind_param(
-        "ssssssi", 
+        "sssss", 
         $data['username'], 
         $data['email'], 
         $data['cnic'], 
-        $data['guardianCnic'], 
-        $data['guardianNumber'], 
         $data['mobileNumber'], 
+     
         $data['id'] // this should be included in $data
     );
 
@@ -80,7 +75,8 @@ public function updatePasswordByEmail($email, $newPassword) {
     return $stmt->execute();
 }
 
-public function getAllHostlers() {
+
+public function getAllWardens() {
     $sql = "SELECT * FROM $this->table";
     $result = $this->conn->query($sql);
 
@@ -93,9 +89,13 @@ public function getAllHostlers() {
     return $wardens;
 }
 
-    }
 
-    
+
+
+
+
+}
+
 
 
 

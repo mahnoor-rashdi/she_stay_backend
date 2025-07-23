@@ -17,6 +17,7 @@ class Database {
 
         $this->createAdminsTable();
           $this->createHostlersTable();
+          $this->createwardensTable();
     }
 
     public function getConnection() {
@@ -58,6 +59,25 @@ private function createHostlersTable() {
         die(json_encode([
             "status" => false,
             "message" => "Failed to create 'hostlers' table: " . $this->conn->error
+        ]));
+    }
+}
+private function createWardensTable() {
+    $query = "CREATE TABLE IF NOT EXISTS wardens (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(100) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        cnic VARCHAR(20) NOT NULL,
+        branchId INT NULL,
+        mobileNumber VARCHAR(20),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+
+    if (!$this->conn->query($query)) {
+        die(json_encode([
+            "status" => false,
+            "message" => "Failed to create 'wardens' table: " . $this->conn->error
         ]));
     }
 }

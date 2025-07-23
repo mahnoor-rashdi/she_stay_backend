@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/Database.php';
-require_once __DIR__ . '/../controllers/HostlerController.php';
+require_once __DIR__ . '/../controllers/WardenControllers.php';
 require_once __DIR__ . '/../helpers/Response.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -10,15 +10,15 @@ $conn = $database->getConnection();
 $request = $_GET['request'] ?? '';
 $data = json_decode(file_get_contents("php://input"), true);
 
-$hostlerController = new HostlersController($conn);
+$wardensController = new WardenControllers($conn);
 
 switch ($request) {
-    case 'hostler-register':
-        $hostlerController->register($data);
+    case 'wardens-register':
+        $wardensController->register($data);
         break;
 
-    case 'hostler-login':
-        $hostlerController->login($data);
+    case 'wardens-login':
+        $wardensController->login($data);
         break;
 
     case 'get-profile':
@@ -31,12 +31,12 @@ switch ($request) {
     }
 
     $token = str_replace('Bearer ', '', $authHeader);
-    echo $hostlerController->getUserProfile($token); // ✅ This does full job
+    echo $wardensController->getWardensProfile($token); // ✅ This does full job
     break;
 
 
     case 'forgot-password':
-         $hostlerController->forgotPassword($data);
+         $wardensController->forgotPassword($data);
         break;
 
   case 'update-password':
@@ -49,11 +49,11 @@ switch ($request) {
         }
 
         $token = str_replace('Bearer ', '', $authHeader);
-        echo $hostlerController->updatePasswordWithToken($token, $data);
+        echo $wardensController->updatePasswordWithToken($token, $data);
         break;
 
 
-         case 'update-hostler-profile':
+         case 'update-profile':
         $headers = getallheaders();
         $authHeader = $headers['Authorization'] ?? '';
 
@@ -63,15 +63,12 @@ switch ($request) {
         }
 
         $token = str_replace('Bearer ', '', $authHeader);
-        echo $hostlerController->updateHostlerProfile($token, $data);
+        echo $wardensController->updateWardensProfile($token, $data);
         break;
 
-
-         case 'getall-hostlers':
-         $hostlerController->getAllHostlers();
+   case 'getall-wardens':
+         $wardensController->getAllWardens();
         break;
-
-
     default:
         echo json_encode(["success" => false, "message" => "Invalid endpoint"]);
 }

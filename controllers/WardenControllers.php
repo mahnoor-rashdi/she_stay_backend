@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../models/Hostlers.php';
+require_once __DIR__ . '/../models/Wardens.php';
 require_once __DIR__ . '/../helpers/Response.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -8,21 +8,20 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
-class HostlersController {
-    private $hostlers;
+class WardenControllers {
+    private $wardens;
     private $jwtSecret ;// Keep it safe and hidden
 
 
   public function __construct($conn) {
-        $this->hostlers = new Hostlers($conn);
+        $this->wardens = new Wardens($conn); 
         $this->jwtSecret = getenv('JWT_SECRET');
     }
 
-    public function register($data) {
+public function register($data) {
         if (
             empty($data['username']) || empty($data['cnic']) || empty($data['email']) ||
-            empty($data['password']) || empty($data['guardianCnic']) ||
-            empty($data['guardianNumber']) || empty($data['mobileNumber'])
+            empty($data['password'])  || empty($data['mobileNumber']) 
         ) {
             return Response::json(false, "All fields are required.");
         }
@@ -31,18 +30,17 @@ class HostlersController {
             return Response::json(false, "Invalid email format.");
         }
 
-        $success = $this->hostlers->register(
+        $success = $this->wardens->register(
             $data['username'],
             $data['cnic'],
             $data['email'],
             $data['password'],
-            $data['guardianCnic'],
-            $data['guardianNumber'],
+         
             $data['mobileNumber']
         );
 
         return $success
-            ? Response::json(true, "Hostler registered successfully.",$data)
+            ? Response::json(true, "Wardens registered successfully.",$data)
             : Response::json(false, "Registration failed.");
     }
 
@@ -52,15 +50,15 @@ class HostlersController {
             return Response::json(false, "Email and password are required.");
         }
 
-        $user = $this->hostlers->login($data['email']);
+        $user = $this->wardens->login($data['email']);
 
         if ($user && password_verify($data['password'], $user['password'])) {
             unset($user['password']); // Hide hashed password
 
             // Generate JWT token
             $payload = [
-                "iss" => "http://localhost:8080", // issuer
-                "aud" => "http://localhost:8080",
+                "iss" => "http://localhost", // issuer
+                "aud" => "http://localhost",
                 "iat" => time(),            // issued at
                 "exp" => time() + 3600,     // 1 hour expiry
                 "data" => [
@@ -81,19 +79,22 @@ class HostlersController {
         }
     }
 
-public function getUserProfile($token) {
+
+
+
+    public function getWardensProfile($token) {
     try {
         $decoded = JWT::decode($token, new Key($this->jwtSecret, 'HS256'));
         $userId = $decoded->data->id;
     
 
-        $user = $this->hostlers->fetchHostlerProfile($userId);
+        $user = $this->wardens->fetchWardensProfile($userId);
 
         if ($user) {
             unset($user['password']); // Hide password for security
             return Response::json(true, "Profile fetched successfully", $user);
         } else {
-            return Response::json(false, "User not found");
+            return Response::json(false, "Wardens not found");
         }
 
     } catch (Exception $e) {
@@ -101,28 +102,27 @@ public function getUserProfile($token) {
     }
 }
 
-public function updateHostlerProfile($token,$data) {
+public function updateWardensProfile($token,$data) {
     try {
         $decoded = JWT::decode($token, new Key($this->jwtSecret, 'HS256'));
         $userId = $decoded->data->id;
     
 
-        $user = $this->hostlers->fetchHostlerProfile($userId);
+        $user = $this->wardens->fetchWardensProfile($userId);
 
          if (!$user) {
-            return Response::json(false, "User not found");
+            return Response::json(false, "Warden not found");
         }
         $updatedData = [
             'id' => $userId,
             'username' => $data['username'] ?? $user['username'],
             'email' => $data['email'] ?? $user['email'],
             'cnic' => $data['cnic'] ?? $user['cnic'],
-            'guardianCnic' => $data['guardianCnic'] ?? $user['guardianCnic'],
-            'guardianNumber' => $data['guardianNumber'] ?? $user['guardianNumber'],
+            'branchId' => $data['branchId'] ?? $user['branchId'],
             'mobileNumber' => $data['mobileNumber'] ?? $user['mobileNumber'],
         ];
 
-        $updated = $this->hostlers->updateHostlerProfile($updatedData);
+        $updated = $this->wardens->updateWardensProfile($updatedData);
 
         if($updated){
             return Response::json(true, "Profile updated successfully", $updatedData);
@@ -145,12 +145,12 @@ public function forgotPassword($data) {
     }
 
     // Check if user exists
-    $user = $this->hostlers->login($data['email']); // Reusing login() to get user by email
+    $user = $this->wardens->login($data['email']); // Reusing login() to get user by email
     if (!$user) {
         return Response::json(false, "Email not found.");
     }
 
-    $success = $this->hostlers->updatePasswordByEmail($data['email'], $data['newPassword']);
+    $success = $this->wardens->updatePasswordByEmail($data['email'], $data['newPassword']);
 
     return $success
         ? Response::json(true, "Password updated successfully.")
@@ -168,13 +168,13 @@ public function updatePasswordWithToken($token, $data) {
     //   print_r($decoded);
         $userId = $decoded->data->id;
 
-        $user = $this->hostlers->fetchHostlerProfile($userId);
+        $user = $this->wardens->fetchWardensProfile($userId);
         // print_r($user);
         if (!$user) {
             return Response::json(false, "User not found.");
         }
 
-        $success = $this->hostlers->updatePasswordByEmail($user['email'], $data['newPassword']);
+        $success = $this->wardens->updatePasswordByEmail($user['email'], $data['newPassword']);
 
         return $success
             ? Response::json(true, "Password updated successfully.")
@@ -196,13 +196,21 @@ public function updatePasswordWithToken($token, $data) {
         }
     }
 
-    
-public function getAllHostlers() {
-$hostlers = $this->hostlers->getAllHostlers();
 
-    if (!empty($hostlers)) {
-        return Response::json(true, "All  hostlers fetched successfully", $hostlers);
+    public function getAllWardens() {
+    $wardens = $this->wardens->getAllWardens();
+
+    if (!empty($wardens)) {
+        return Response::json(true, "All wardens fetched successfully", $wardens);
     } else {
-        return Response::json(false, "No hostlers found");
-    }}
+        return Response::json(false, "No wardens found");
+    }
+}
+
+
+
+
+    
+
+
 }
